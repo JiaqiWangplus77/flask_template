@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+
+<body>
+<nav class="navbar navbar-expand-sm bg-light">
+  <label class="navbar-nav text-black" ><font size="5">Template</font> </label>
+  <img src="static/imag1.png" class="navbar-brand ml-auto">
+
+</nav>
+
+
+
+
+<div class="container-fluid" style="margin:20px"> 
+     <h2  class=" text-black">Log in</h2>
+      <form action="/handle_data" method="post">
+        <label for="username">Username: </label>
+        <input name="username" id="username" required><br><br>
+        <label for="password">Password: </label>
+        <input type="password" name="password" id="password" required>
+        <input type="submit" value="Log In">
+      </form>
+     
+      <p id="current">{{my_string}}</p>
+        
+</div>
+
+<nav class="navbar navbar-expand-sm bg-light navbar-dark ">
+  <label class="navbar-nav text-dark " >Address</label>
+  <label class="navbar-nav text-black ml-auto ">66666666</label>
+</nav>
+
+
+</body>
+</html>

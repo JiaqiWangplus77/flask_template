@@ -1,0 +1,569 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<style>
+.hightlight{
+    background-color: lightblue;
+}
+
+.tableFixHead    { overflow:auto; height:200px; }
+.tableFixHead th { position: sticky; top: 0;  background-color: #FFFFFF;}
+</style>
+
+<script>
+$(document).ready(function(){
+    var Ts;
+    var ti,a,y1,y2,y3,random_set,table1,table2;
+    var isReady1=0,isReady2=0,isReady3=0;   
+    initialize();
+    
+    $('[data-toggle="tooltip"]').tooltip(); 
+    
+    function initialize(){         
+        $('#disabled_button').prop('disabled', true); 
+        $('#tab2_button1').prop('disabled',true); 
+
+        $("#text1").text("Hello World")
+        $("#tab1_imag").attr('src', "static/imag.png").show();
+        
+        initialize_plotly("chartContainer");
+        initialize_plotly("tab2_plot");
+        $("#table1").empty() 
+        $("#table2").empty()          
+        
+        $('#tab1_label').css({ 'background-color' : '', 'color' : '' }); 
+        $('#tab2_label').css({ 'background-color' : '', 'color' : '' }); 
+    }    
+
+    function initialize_plotly(div_name){
+        var layout_init = {
+                  autosize: true,
+                  xaxis: {
+                    range:[0,100]
+                  },
+                  yaxis: {
+                    range:[0,100]
+                  },              
+                  margin: {
+                    l: 50,
+                    r: 50,
+                    b:40, // to avoid cover the title of x-axis
+                    t:50
+                  },
+                };
+        Plotly.react(div_name,[],layout_init,{displayModeBar:false,responsive:true});        
+    } 
+    
+
+    function draw_table(table_body,itemsArray,num=true){
+         var row, cell;
+         //$('#table_body').empty();
+         table_body.empty();
+         for(var i=0; i<itemsArray.length; i++){
+             row = $( '<tr/>' );
+             //$('#table_body').append(row);
+             table_body.append(row);
+             if (num){
+             cell = $('<td>'+(i+1)+'</td>');
+             row.append(cell);     
+             }
+             for(var j=0; j<itemsArray[i].length; j++){
+                 cell = $('<td>'+itemsArray[i][j]+'</td>')
+                 row.append( cell );
+             }
+          }
+        }
+
+   function tab_plotly_relayout(div_name){
+        var update = {
+            autosize: true
+        };
+        Plotly.relayout(div_name, update)
+               
+   }   
+
+
+    $('.nav-tabs a').on('shown.bs.tab', function(event){
+      // to fix the bug of inilization of the plot.
+      // when a tab is not activated, the width of div is zero. 
+      // so there is probled with the size of the plot 
+            var index = $(event.target).attr("value"); 
+            switch(parseInt(index)){
+              case 1:
+                tab_plotly_relayout("chartContainer");
+                break;
+              case 2:
+                tab_plotly_relayout("tab2_plot");                
+                var pos=$( "#table2 tr").eq(parseInt($('#scroll_num').val()-1)).position();
+                if (pos){
+                    var width=$( "#table2 tr").eq(0).height() 
+                   //how to get the width of table row
+                                                          
+                    $( "#tab2_table2_div").scrollTop(-1*width+pos.top);
+              
+                }
+
+                break;
+
+               }     
+        
+    });
+
+
+       
+     $("#type").change(function(){
+        switch(parseInt($("#type").val())){
+          case 1:
+            $("#text1").text("sin function")
+            $("#tab1_imag").attr('src', "static/sin.png").show();
+            
+            break;
+          case 2:
+            $("#tab1_imag").attr('src', "static/step.png").show();
+            $("#text1").text("step function")
+            break;                 
+           }  
+        });      
+
+
+
+   $("#confirm").click(function(){
+    if (!($('#type').val())) {
+       alert("please choose a function type")
+    } else {
+       var amp=$('#amplitude').val();
+       $.ajax({
+             data:{
+             amp:amp,
+             typ:$('#type').val()   
+             },
+             type:'POST',
+             url:'/test1'
+             })
+          .done(function(data){
+             ti=data.t;
+             y1=data.y1; 
+             random_set=data.random_set;
+             isReadyInput=1;           
+             xy_plot("chartContainer",ti,y1);
+             $('#tab2_button1').prop('disabled',false); 
+         
+          });
+          event.preventDefault(); 
+
+    }   
+   
+ 
+   
+   });
+
+     $("#tab1_plot").change(function(){
+        switch(parseInt($("#tab1_plot").val())){
+          case 1:
+            xy_plot("chartContainer",ti,y1);            
+            break;
+          case 2:
+            xy_plot("chartContainer",ti,random_set); 
+            break;                 
+           }  
+        }); 
+        
+        
+    function xy_plot(chartContainer,ti,y1){
+       if (!isReadyInput){
+             alert("Please Confrim First");
+         } else {
+             var data1={
+                          x: ti,
+                          y: y1,
+                          mode: 'lines',                          
+                            };
+             
+             data=[data1];
+             var layout1 = {
+                      title:{
+                        text: 'plot',
+                       
+                        font: {
+                          family: 'Times New Roman, monospace',
+                          size: 20,
+                          color: '#7f7f7f'
+                        }
+                      },     
+                      xaxis: {
+                        title: 'time(sec)',                                                     
+                        titlefont: {
+                              family: 'Times New Roman, monospace',
+                              size: 16,
+                              color: '#7f7f7f'
+                                        }                    
+                                        
+                      },
+                      yaxis: {
+                        title: 'y',
+                        titlefont: {
+                          family: 'Times New Roman, monospace',
+                          size: 16,
+                          color: '#7f7f7f'
+                        }
+                      },
+                      margin: {
+                        l: 50,
+                        r: 50,
+                        b: 40, // to avoid cover the title of x-axis
+                        t: 50
+                      },
+                    };                 
+             
+             Plotly.react(chartContainer,data,layout1,{displayModeBar: false,responsive:true});               
+
+         
+         }
+       } 
+
+   $("#tab2_button1").click(function(){
+       $.ajax({
+             type:'POST',
+             url:'/loadtable1'
+             })
+          .done(function(data){
+             table1=data.table1;           
+             xy_plot("tab2_plot",ti,y1);
+             draw_table($("#table1"),table1,num=false);
+             $('#tab2_button2').prop('disabled',false); 
+         
+          });
+          event.preventDefault();  
+       });
+
+   $("#tab2_button2").click(function(){
+       $.ajax({
+             type:'POST',
+             url:'/loadtable2'
+             })
+          .done(function(data){
+             table2=data.table2;           
+             xy_plot("tab2_plot",ti,y1);
+             draw_table($("#table2"),table2,num=true);
+         
+          });
+          event.preventDefault();  
+       });
+
+ 
+   $("#table1").on("click", "td", function() {
+    
+     var row_index=parseInt($(this).parent().index())+1;
+     draw_plot2(row_index);  // write later 
+     $("#table2 td").parent().siblings().removeClass("hightlight");
+     $(this).parent().siblings().removeClass("hightlight"); 
+     $(this).parent().addClass("hightlight"); 
+
+   });
+   
+   $("#table2").on("click", "td", function() {
+    
+     var row_index=parseInt($(this).parent().index())+1;
+     draw_plot3(row_index);  // write later 
+     $("#table1 td").parent().siblings().removeClass("hightlight");
+     $(this).parent().siblings().removeClass("hightlight"); 
+     $(this).parent().addClass("hightlight"); 
+
+   });   
+
+    function draw_plot2(row_index){
+       $.ajax({
+             data:{
+             num:row_index,
+             y1:JSON.stringify(y1)
+               
+             },
+             type:'POST',
+             url:'/replot1'
+             })
+          .done(function(data){
+              y2=data.y2;
+              tab2_plot_fun(); 
+
+         
+          });
+          event.preventDefault(); 
+    }
+
+    function draw_plot3(row_index){
+       $.ajax({
+             data:{
+             num:row_index,
+             y1:JSON.stringify(y1)
+               
+             },
+             type:'POST',
+             url:'/replot2'
+             })
+          .done(function(data){
+              y2=data.y2;
+              tab2_plot_fun(); 
+
+         
+          });
+          event.preventDefault(); 
+    }
+    
+    function tab2_plot_fun(){
+          var data1={
+                      x: ti.slice(1),
+                      y: y1.slice(1),
+                      mode: 'lines',  
+                      name:"original"                        
+                        };
+
+          var data2={
+                      x: ti.slice(1),
+                      y: y2.slice(1),
+                      mode: 'lines',  
+                      mode: 'lines',  
+                      name:"transformed"                        
+                        };
+
+
+          var data=[data1,data2];
+          var layout1 = {
+                  title:{
+                    text: '',
+                   
+                    font: {
+                      family: 'Times New Roman, monospace',
+                      size: 20,
+                      color: '#7f7f7f'
+                    }
+                  },     
+                  xaxis: {
+                    title: 'time(sec)',
+                    
+                   
+                    titlefont: {
+                          family: 'Times New Roman, monospace',
+                          size: 16,
+                          color: '#7f7f7f'
+                                    }                    
+                                    
+                  },
+                  yaxis: {
+                    title: 'y',
+                    titlefont: {
+                      family: 'Times New Roman, monospace',
+                      size: 16,
+                      color: '#7f7f7f'
+                    }
+                  },
+                  margin: {
+                    l: 50,
+                    r: 50,
+                    b: 40, // to avoid cover the title of x-axis
+                    t: 50
+                  },
+                };
+
+          Plotly.react("tab2_plot",data,layout1,{displayModeBar:false,responsive:true});     
+    }
+
+   $("#tab2_button3").click(function(){
+       var pos=$( "#table2 tr").eq(parseInt($('#scroll_num').val()-1)).position();
+       var width=$( "#table2 tr").eq(0).height() 
+       // to make sure that the highlighted row is not covered by the head
+                           
+       $( "#tab2_table2_div").scrollTop(-1*width+pos.top); 
+
+
+       });
+
+
+   });
+</script>
+</head>
+
+
+
+<body>
+<nav class="navbar navbar-expand-sm bg-light">
+  <label class="navbar-nav text-black" ><font size="5">Template</font> </label>
+  <img src="static/imag1.png" class="navbar-brand ml-auto">
+
+</nav>
+
+
+   
+<div class="container-fluid float-left " style="width: 100%;">
+  <!-- Nav tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" data-toggle="tab" id="tab1_label" href="#Tab1"  value=1>Tab1</a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" id="tab2_label" href="#Tab2"  value=2>Tab2</a>
+    </li>
+
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content container-fluid border-right border-left border-bottom">  
+        <div id="Tab1" class="container-fluid tab-pane active">
+            <div class="row">
+               <div class="col-sm-4 border-right"><br>
+                    <h4>head</h4>  
+                    <form method="post">
+                       <div class="form-group row">
+                            <label class="col-sm-5 col-form-label ">Amplitude</label>
+                            <div class="col-sm-7"  style="min-width:140px">
+                              <input type="number" class="form-control " id="amplitude" value="1">
+                            </div>                                             
+                       </div>
+                                       
+                       <div class="form-group row">
+                            <label class="col-sm-5 col-form-label">Function type</label>
+                            <div class="col-sm-7" style="min-width:140px">
+                                  <select id="type" class="form-control">
+                                    <option value=0 disabled selected>choose a function type</option>
+                                    <option value=1>Sinusoidal function</option>
+                                    <option value=2>Step function</option>
+                                  </select>  
+                            </div>                       
+                       </div>
+                                                          
+                    </form> 
+                    <button type="button" id="confirm">Confirm</button><br><br>
+                    <button type="button" id="disabled_button">disabled</button> <br><br> 
+                     
+                    <p>this button is disabled by Jquery.
+                       by reset button,all the table and plot are initialized. and the text color are reset
+                    </p> 
+                                      
+                  
+                    <img id="tab1_imag" style="height: 160px; width: 240px;" 
+                        src="static/imag.png">
+                    <p id="text1"></p>
+                    <p>this above text is set by Jquery,
+                       the photo can be selected using selector above(using Jquery)</p> 
+                       
+            
+               </div>
+             
+               <div class="col-sm-8">
+                    <br>
+                    <h4>Plot</h4>  
+                    <select  id="tab1_plot" class="form-control">
+                        <option value="1" selected>plot</option>
+                        <option value="2">random number</option>
+
+                    </select>
+                    <br>              
+                    <div id="chartContainer" class="border" style="height: 300px; width: 100%;"></div>
+                    <p>plot is initialized in JS, with function(check JS part)</p> 
+                    <br> 
+                                          
+               </div>
+        
+            </div>    
+    
+        </div> <!--  end of tab 1 -->
+    
+      <!--  tab2 -->  
+        <div id="Tab2" class="container-fluid tab-pane fade">
+               <div class="row">
+                  <div class="col-sm-4  border-right"><br>
+                         <h4>h4 Title</h4>                                        
+                            <button type="button" id="tab2_button1">load table 1</button><br><br>
+                            <button type="button" id="tab2_button2" disabled>load table 2</button><br><br>
+                            <p>click the firtst button to enable the second </p>
+                            <input type="number" id="scroll_num" name="num" min="1" max="8" value="1" step="1">
+                            <button type="button" id="tab2_button3" >scroll test</button><br><br>
+                            <p>scroll the item in table 2 to top</p> 
+                                                                      
+                  </div>
+                 
+
+                  <div class="col-sm-8">
+                       <br>
+                       <img id="tab2_imag1" src="static/imag1.png" style="height: 160px; width:240px;">
+                       <img id="tab2_imag2" src="static/imag2.png" style="height: 160px; width:240px;">
+                       <img id="tab2_imag3" src="static/imag3.png" style="height: 160px; width:240px;">              
+                       <br><br>
+                       <div class="row">
+                          <div class="col-sm-6" >
+                               <div style="height:250px;overflow:auto;" class="border tableFixHead" >
+                                    <table class="table table-bordered table-hover table-responsive-sm " style="overflow:auto;font-family:Times New Roman;">                      
+                                      <tr>
+                                        
+                                        <th>Amp</th>
+                                        <th>delay</th>
+                                      </tr>
+                                      <tbody id="table1" >
+                                      </tbody>
+                                    </table>                    
+                               </div>                     
+                          </div>
+                         
+                          <div class="col-sm-6">
+                                <div style="height:250px;overflow:auto;"  class="border tableFixHead" id="tab2_table2_div">
+                                    <table class="table table-bordered table-responsive-sm" style="overflow:auto;font-family:Times New Roman;">                                      
+                                      <tr>
+                                        <th>No. </th>
+                                        <th>Amp</th>
+                                        <th>delay</th>
+                                      </tr>
+                                      <tbody id="table2">
+                                      </tbody>
+                                    </table>             
+                               </div>                       
+                          </div>              
+    
+                       </div>  <!--  end of 2 table part -->
+                       
+                       <br>
+                       <div class="row">
+                          <div class="col-sm-9 ">
+                                <div id="tab2_plot" style="height: 360px; width:100%;"></div> 
+                          </div>
+                         
+                          <div class="col-sm-3">
+                                <h4>Title</h4>
+                                 <p>paragraph</p>
+
+                        
+                          </div>
+                    
+                       </div> <!--  end of  rihgt 3rd part -->
+    
+            
+                 </div>  <!--  end of tab2 right part -->  
+        
+         
+            </div> <!--  <div class="row">  -->
+        </div>   <!--  end of tab2  -->
+     
+ 
+  
+  
+</div>
+
+
+<nav class="navbar navbar-expand-sm bg-light navbar-dark ">
+  <label class="navbar-nav text-dark " >Address</label>
+  <label class="navbar-nav text-black ml-auto ">66666666</label>
+</nav>
+ 
+  
+
+
+</body>
+</html>
